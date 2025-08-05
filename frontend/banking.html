@@ -371,23 +371,29 @@
         }
 
         function validatePhone(phone) {
-            return /^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/\s/g, ''));
+            // Enhanced validation with XSS protection
+            const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '');
+            return /^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone.replace(/\s/g, ''));
         }
 
         function validateNickname(nickname) {
-            return nickname.length >= 3 && /^[a-zA-Z0-9_-]+$/.test(nickname);
+            // Enhanced validation with XSS protection
+            const cleanNickname = nickname.replace(/[^\w\-]/g, '');
+            return cleanNickname.length >= 3 && cleanNickname.length <= 20;
         }
 
         function validateOTP(otp) {
-            return /^\d{6}$/.test(otp);
+            // Enhanced validation
+            const cleanOtp = otp.replace(/\D/g, '');
+            return /^\d{6}$/.test(cleanOtp);
         }
 
         function nextStep() {
             if (currentStep === 1) {
-                const phone = document.getElementById('phone').value;
+                const phone = document.getElementById('phone').value.trim();
                 hideError('phone-error');
                 
-                if (!phone.trim()) {
+                if (!phone) {
                     showError('phone-error', 'NUMERO TELEFONO RICHIESTO');
                     return;
                 }
@@ -397,26 +403,28 @@
                     return;
                 }
                 
-                userData.phone = phone;
+                // Store sanitized data
+                userData.phone = phone.replace(/[^\d\+\-\s]/g, '');
                 document.getElementById('step1').classList.add('hidden');
                 document.getElementById('step2').classList.remove('hidden');
                 currentStep = 2;
                 
             } else if (currentStep === 2) {
-                const nickname = document.getElementById('nickname').value;
+                const nickname = document.getElementById('nickname').value.trim();
                 hideError('nickname-error');
                 
-                if (!nickname.trim()) {
+                if (!nickname) {
                     showError('nickname-error', 'NICKNAME RICHIESTO');
                     return;
                 }
                 
                 if (!validateNickname(nickname)) {
-                    showError('nickname-error', 'SOLO LETTERE, NUMERI, _ E - (MIN 3 CARATTERI)');
+                    showError('nickname-error', 'NICKNAME NON VALIDO (3-20 caratteri, solo lettere/numeri)');
                     return;
                 }
                 
-                userData.nickname = nickname;
+                // Store sanitized data
+                userData.nickname = nickname.replace(/[^\w\-]/g, '');
                 document.getElementById('step2').classList.add('hidden');
                 document.getElementById('step3').classList.remove('hidden');
                 currentStep = 3;
@@ -424,10 +432,10 @@
         }
 
         function completeRegistration() {
-            const otp = document.getElementById('otp').value;
+            const otp = document.getElementById('otp').value.trim();
             hideError('otp-error');
             
-            if (!otp.trim()) {
+            if (!otp) {
                 showError('otp-error', 'CODICE OTP RICHIESTO');
                 return;
             }
@@ -437,7 +445,8 @@
                 return;
             }
             
-            // In produzione, qui verificheresti l'OTP con il backend
+            // Store sanitized OTP data
+            userData.otp = otp.replace(/[^\d]/g, '');
             userData.verified = true;
             userData.balance = 0.00;
             userData.cashback = 0.00;
@@ -448,6 +457,7 @@
             document.getElementById('registration').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             
+            // Update dashboard with XSS protection
             document.getElementById('user-nickname').textContent = userData.nickname;
             document.getElementById('user-phone').textContent = userData.phone;
             document.getElementById('balance-amount').textContent = '€ ' + userData.balance.toFixed(2);

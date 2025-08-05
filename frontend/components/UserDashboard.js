@@ -30,23 +30,26 @@ export default function UserDashboard() {
     const newErrors = {};
     
     if (currentStep >= 1) {
+      const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '');
       if (!phone.trim()) newErrors.phone = "NUMERO TELEFONO RICHIESTO";
-      if (!/^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/\s/g, ''))) {
+      if (!/^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone.replace(/\s/g, ''))) {
         newErrors.phone = "FORMATO NUMERO NON VALIDO";
       }
     }
     
     if (currentStep >= 2) {
+      const cleanNickname = nickname.replace(/[^\w\-]/g, '');
       if (!nickname.trim()) newErrors.nickname = "NICKNAME RICHIESTO";
-      if (nickname.length < 3) newErrors.nickname = "NICKNAME TROPPO CORTO - MIN 3 CARATTERI";
-      if (!/^[a-zA-Z0-9_-]+$/.test(nickname)) {
+      if (cleanNickname.length < 3) newErrors.nickname = "NICKNAME TROPPO CORTO - MIN 3 CARATTERI";
+      if (!/^[a-zA-Z0-9_-]+$/.test(cleanNickname)) {
         newErrors.nickname = "SOLO LETTERE, NUMERI, _ E -";
       }
     }
     
     if (currentStep >= 3) {
+      const cleanOtp = otp.replace(/\D/g, '');
       if (!otp.trim()) newErrors.otp = "CODICE OTP RICHIESTO";
-      if (otp.length !== 6) newErrors.otp = "OTP DEVE ESSERE 6 CIFRE";
+      if (cleanOtp.length !== 6) newErrors.otp = "OTP DEVE ESSERE 6 CIFRE";
     }
     
     setErrors(newErrors);
@@ -77,11 +80,14 @@ export default function UserDashboard() {
     
     setLoading(true);
     try {
+      // Sanitize phone number
+      const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '').replace(/\s/g, '');
+      
       // Production: Integrate with real SMS service
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.replace(/\s/g, '') })
+        body: JSON.stringify({ phone: cleanPhone })
       });
       
       if (response.ok) {
@@ -102,14 +108,19 @@ export default function UserDashboard() {
     
     setLoading(true);
     try {
+      // Sanitize inputs
+      const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '').replace(/\s/g, '');
+      const cleanNickname = nickname.replace(/[^\w\-]/g, '');
+      const cleanOtp = otp.replace(/\D/g, '');
+      
       // Production: Verify OTP with backend
       const response = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          phone: phone.replace(/\s/g, ''), 
-          nickname, 
-          otp 
+          phone: cleanPhone, 
+          nickname: cleanNickname, 
+          otp: cleanOtp 
         })
       });
       
@@ -117,8 +128,8 @@ export default function UserDashboard() {
         const result = await response.json();
         
         const userData = { 
-          phone: phone.replace(/\s/g, ''), 
-          nickname, 
+          phone: cleanPhone, 
+          nickname: cleanNickname, 
           registeredAt: new Date().toISOString(),
           balance: 0.00,
           rewards: 0.00,

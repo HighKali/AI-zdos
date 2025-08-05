@@ -27,7 +27,10 @@ router.post("/send-otp", (req, res) => {
   };
   
   // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
-  console.log(`OTP for ${phone}: ${otp}`);
+  // Production: Remove console.log and implement real SMS
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV] OTP for ${phone}: ${otp}`);
+  }
   
   res.json({ success: true, message: "OTP inviato" });
 });
