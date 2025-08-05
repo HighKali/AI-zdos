@@ -77,12 +77,21 @@ export default function UserDashboard() {
     
     setLoading(true);
     try {
-      // Simulate OTP sending
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setOtpSent(true);
-      nextStep();
+      // Production: Integrate with real SMS service
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone.replace(/\s/g, '') })
+      });
+      
+      if (response.ok) {
+        setOtpSent(true);
+        nextStep();
+      } else {
+        setErrors({ phone: "ERRORE INVIO OTP - RIPROVA" });
+      }
     } catch (error) {
-      setErrors({ phone: "ERRORE INVIO OTP - RIPROVA" });
+      setErrors({ phone: "ERRORE CONNESSIONE - RIPROVA" });
     } finally {
       setLoading(false);
     }
@@ -93,26 +102,37 @@ export default function UserDashboard() {
     
     setLoading(true);
     try {
-      // Simulate OTP verification and account creation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Production: Verify OTP with backend
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          phone: phone.replace(/\s/g, ''), 
+          nickname, 
+          otp 
+        })
+      });
       
-      // Generate secure passkey
-      const generatedPasskey = Math.random().toString(36).slice(2, 10).toUpperCase();
-      setPasskey(generatedPasskey);
-      
-      const userData = { 
-        phone: phone.replace(/\s/g, ''), 
-        nickname, 
-        registeredAt: new Date().toISOString(),
-        balance: 0.00,
-        rewards: 0.00,
-        cashback: 0.00,
-        passkey: generatedPasskey,
-        verified: true
-      };
-      localStorage.setItem('zdos-user', JSON.stringify(userData));
-      setRegistered(true);
-      setStep(1);
+      if (response.ok) {
+        const result = await response.json();
+        
+        const userData = { 
+          phone: phone.replace(/\s/g, ''), 
+          nickname, 
+          registeredAt: new Date().toISOString(),
+          balance: 0.00,
+          rewards: 0.00,
+          cashback: 0.00,
+          passkey: result.passkey,
+          verified: true
+        };
+        
+        localStorage.setItem('zdos-user', JSON.stringify(userData));
+        setRegistered(true);
+        setStep(1);
+      } else {
+        setErrors({ otp: "CODICE OTP NON VALIDO" });
+      }
     } catch (error) {
       setErrors({ general: "ERRORE SISTEMA - RIPROVA" });
     } finally {
@@ -351,40 +371,21 @@ export default function UserDashboard() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+39 123 456 7890"
-                    className={`phone-input ${errors.phone ? 'error' : ''}`}
+                    className={errors.phone ? 'error' : ''}
                   />
-                </div>
-                {errors.phone && (
-                  <div className="error-message">
-                    <span>⚠️</span>
-                    <span>{errors.phone}</span>
-                  </div>
-                )}
-                <div className="input-tip">
-                  <span>🔒</span>
-                  <span>Il tuo numero viene utilizzato solo per la verifica</span>
+                  {errors.phone && (
+                    <div className="error-message">{errors.phone}</div>
+                  )}
                 </div>
               </div>
 
-              <div className="step-actions">
-                <button 
-                  onClick={sendOTP} 
-                  disabled={loading}
-                  className="btn btn-primary btn-lg"
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner"></div>
-                      <span>INVIO OTP...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>INVIA CODICE</span>
-                      <span>📲</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              <button 
+                className="step-btn"
+                onClick={sendOTP}
+                disabled={loading}
+              >
+                {loading ? 'INVIO IN CORSO...' : 'INVIA OTP'}
+              </button>
             </div>
           )}
 
@@ -394,7 +395,7 @@ export default function UserDashboard() {
                 <div className="step-icon">👤</div>
                 <div className="step-info">
                   <h4 className="step-title">SCEGLI NICKNAME</h4>
-                  <p className="step-desc">Come vuoi essere identificato nella piattaforma</p>
+                  <p className="step-desc">Come vuoi essere identificato nel sistema?</p>
                 </div>
               </div>
 
@@ -405,30 +406,24 @@ export default function UserDashboard() {
                     type="text"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    placeholder="Il tuo nickname..."
-                    className={`nickname-input ${errors.nickname ? 'error' : ''}`}
+                    placeholder="IlTuoNickname"
+                    className={errors.nickname ? 'error' : ''}
                   />
+                  {errors.nickname && (
+                    <div className="error-message">{errors.nickname}</div>
+                  )}
                 </div>
-                {errors.nickname && (
-                  <div className="error-message">
-                    <span>⚠️</span>
-                    <span>{errors.nickname}</span>
-                  </div>
-                )}
-                <div className="input-tip">
-                  <span>💡</span>
-                  <span>Puoi usare lettere, numeri, trattini e underscore</span>
+                <div className="input-hint">
+                  Min 3 caratteri • Solo lettere, numeri, _ e -
                 </div>
               </div>
 
-              <div className="step-actions">
-                <button onClick={prevStep} className="btn btn-secondary">
-                  <span>◀️</span>
-                  <span>INDIETRO</span>
+              <div className="step-buttons">
+                <button className="step-btn secondary" onClick={prevStep}>
+                  INDIETRO
                 </button>
-                <button onClick={nextStep} className="btn btn-primary btn-lg">
-                  <span>CONTINUA</span>
-                  <span>▶️</span>
+                <button className="step-btn" onClick={nextStep}>
+                  CONTINUA
                 </button>
               </div>
             </div>
@@ -439,8 +434,8 @@ export default function UserDashboard() {
               <div className="step-header">
                 <div className="step-icon">🔐</div>
                 <div className="step-info">
-                  <h4 className="step-title">VERIFICA OTP</h4>
-                  <p className="step-desc">Inserisci il codice a 6 cifre ricevuto via SMS</p>
+                  <h4 className="step-title">VERIFICA TELEFONO</h4>
+                  <p className="step-desc">Inserisci il codice OTP ricevuto via SMS</p>
                 </div>
               </div>
 
@@ -450,73 +445,35 @@ export default function UserDashboard() {
                   <input
                     type="text"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    className={`otp-input ${errors.otp ? 'error' : ''}`}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="123456"
                     maxLength="6"
+                    className={errors.otp ? 'error' : ''}
                   />
+                  {errors.otp && (
+                    <div className="error-message">{errors.otp}</div>
+                  )}
                 </div>
-                {errors.otp && (
-                  <div className="error-message">
-                    <span>⚠️</span>
-                    <span>{errors.otp}</span>
-                  </div>
-                )}
-                <div className="input-tip">
-                  <span>📱</span>
-                  <span>Codice inviato a {phone}</span>
+                <div className="input-hint">
+                  Codice a 6 cifre inviato al {phone}
                 </div>
               </div>
 
-              {passkey && (
-                <div className="passkey-display">
-                  <div className="passkey-header">
-                    <span className="passkey-icon">🔑</span>
-                    <span className="passkey-title">LA TUA PASSKEY</span>
-                  </div>
-                  <div className="passkey-code">{passkey}</div>
-                  <div className="passkey-note">
-                    Salva questa passkey in un posto sicuro. Ti servirà per accedere.
-                  </div>
-                </div>
-              )}
-
-              <div className="step-actions">
-                <button onClick={prevStep} className="btn btn-secondary">
-                  <span>◀️</span>
-                  <span>INDIETRO</span>
+              <div className="step-buttons">
+                <button className="step-btn secondary" onClick={prevStep}>
+                  INDIETRO
                 </button>
                 <button 
-                  onClick={registerUser} 
+                  className="step-btn"
+                  onClick={registerUser}
                   disabled={loading}
-                  className="btn btn-primary btn-lg"
                 >
-                  {loading ? (
-                    <>
-                      <div className="spinner"></div>
-                      <span>VERIFICA...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>COMPLETA</span>
-                      <span>✅</span>
-                    </>
-                  )}
+                  {loading ? 'VERIFICA IN CORSO...' : 'COMPLETA REGISTRAZIONE'}
                 </button>
               </div>
             </div>
           )}
         </div>
-
-        {errors.general && (
-          <div className="system-error">
-            <div className="error-icon">⛔</div>
-            <div className="error-content">
-              <div className="error-title">ERRORE SISTEMA</div>
-              <div className="error-desc">{errors.general}</div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

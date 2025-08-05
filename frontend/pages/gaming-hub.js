@@ -1,336 +1,251 @@
-import { useState, useEffect } from "react";
-import Layout from "../components/Layout";
+import { useState, useEffect } from 'react';
+import Layout from '../components/Layout';
 
 export default function GamingHub() {
-  const [selectedGame, setSelectedGame] = useState("doom");
-  const [lobbyData, setLobbyData] = useState({
-    doom: {
-      servers: [
-        { id: 1, name: "MARS BASE ALPHA", players: "8/12", difficulty: "ULTRA-VIOLENCE", ping: 45, map: "E1M1" },
-        { id: 2, name: "HELL ON EARTH", players: "12/16", difficulty: "NIGHTMARE", ping: 78, map: "MAP01" },
-        { id: 3, name: "INFERNO STATION", players: "6/8", difficulty: "HURT ME PLENTY", ping: 32, map: "E3M7" },
-        { id: 4, name: "EUROPEAN SECTOR", players: "4/12", difficulty: "ULTRA-VIOLENCE", ping: 89, map: "MAP15" }
-      ],
-      totalPlayers: 1247,
-      version: "ZDOOM 4.8.2",
-      mods: ["BRUTAL DOOM", "PROJECT BRUTALITY", "COMPLEX DOOM"]
-    },
-    duke: {
-      servers: [
-        { id: 1, name: "DUKE BURGER MAYHEM", players: "6/8", difficulty: "COME GET SOME", ping: 34, map: "E1L1" },
-        { id: 2, name: "ALIEN INVASION NYC", players: "10/12", difficulty: "DAMN I'M GOOD", ping: 56, map: "E2L1" },
-        { id: 3, name: "SPACE CASINO", players: "4/8", difficulty: "PIECE OF CAKE", ping: 67, map: "E4L2" },
-        { id: 4, name: "SHRAPNEL CITY", players: "8/16", difficulty: "COME GET SOME", ping: 43, map: "E3L4" }
-      ],
-      totalPlayers: 867,
-      version: "EDUKE32 SYNTH",
-      mods: ["HIGH RES PACK", "DUKE PLUS", "DUKE NUKEM FOREVER MOD"]
-    }
+  const [balance, setBalance] = useState(0);
+  const [gameStats, setGameStats] = useState({
+    totalPlayed: 0,
+    highScore: 0,
+    tokensEarned: 0
   });
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const [playerStats, setPlayerStats] = useState({
-    kills: 15678,
-    deaths: 4231,
-    ratio: 3.7,
-    level: 47,
-    experience: 89234,
-    achievements: 156
-  });
-
-  const gameInfo = {
-    doom: {
-      title: "DOOM ETERNAL ONLINE",
-      subtitle: "RIP AND TEAR UNTIL IT IS DONE",
-      icon: "👹",
-      color: "text-error",
-      bgColor: "from-red-900/20 to-orange-900/20",
-      description: "The classic FPS that started it all. Join epic multiplayer battles across Mars and Hell dimensions.",
-      features: [
-        "🔫 Classic weapon arsenal",
-        "👹 Demon hordes",
-        "🏟️ Iconic maps",
-        "⚔️ Deathmatch & Team modes",
-        "🎯 Custom mods support",
-        "🏆 Ranking system"
-      ]
-    },
-    duke: {
-      title: "DUKE NUKEM 3D ONLINE",
-      subtitle: "HAIL TO THE KING, BABY!",
-      icon: "💪",
-      color: "text-warning",
-      bgColor: "from-yellow-900/20 to-red-900/20",
-      description: "The king of action heroes is back! Fight alien scum across Earth's cities with style and attitude.",
-      features: [
-        "💥 Devastating weapons",
-        "👽 Alien invasion",
-        "🏙️ Urban battlegrounds",
-        "🎮 Classic gameplay",
-        "🎤 Duke's one-liners",
-        "🏆 Tournament mode"
-      ]
+  useEffect(() => {
+    // Load user gaming data
+    const savedStats = localStorage.getItem('zdos-gaming-stats');
+    if (savedStats) {
+      setGameStats(JSON.parse(savedStats));
     }
+    
+    const savedBalance = localStorage.getItem('zdos-token-balance');
+    if (savedBalance) {
+      setBalance(parseFloat(savedBalance));
+    }
+  }, []);
+
+  const atariGames = [
+    {
+      id: 'asteroid',
+      name: 'ASTEROID BLASTER',
+      icon: '🚀',
+      reward: 0.5,
+      description: 'Distruggi asteroidi e guadagna token',
+      difficulty: 'Facile'
+    },
+    {
+      id: 'snake',
+      name: 'CYBER SNAKE',
+      icon: '🐍',
+      reward: 0.3,
+      description: 'Snake cyberpunk con rewards',
+      difficulty: 'Medio'
+    },
+    {
+      id: 'breakout',
+      name: 'NEON BREAKOUT',
+      icon: '🎯',
+      reward: 0.4,
+      description: 'Rompi i blocchi neon',
+      difficulty: 'Medio'
+    },
+    {
+      id: 'pong',
+      name: 'RETRO PONG',
+      icon: '🏓',
+      reward: 0.2,
+      description: 'Pong classico con twist moderno',
+      difficulty: 'Facile'
+    }
+  ];
+
+  const faucetClaim = async () => {
+    const lastClaim = localStorage.getItem('zdos-last-faucet-claim');
+    const now = new Date().getTime();
+    const hourInMs = 60 * 60 * 1000;
+
+    if (lastClaim && (now - parseInt(lastClaim)) < hourInMs) {
+      alert('Faucet disponibile ogni ora!');
+      return;
+    }
+
+    const faucetAmount = 0.1;
+    const newBalance = balance + faucetAmount;
+    setBalance(newBalance);
+    
+    localStorage.setItem('zdos-token-balance', newBalance.toString());
+    localStorage.setItem('zdos-last-faucet-claim', now.toString());
+    
+    alert(`+${faucetAmount} ZDOS tokens ottenuti dal faucet!`);
   };
 
-  const currentGame = gameInfo[selectedGame];
-  const currentLobby = lobbyData[selectedGame];
+  const playGame = (game) => {
+    setSelectedGame(game);
+    setIsPlaying(true);
+    
+    // Simulate game play
+    setTimeout(() => {
+      const earnedTokens = game.reward;
+      const newBalance = balance + earnedTokens;
+      setBalance(newBalance);
+      
+      const newStats = {
+        ...gameStats,
+        totalPlayed: gameStats.totalPlayed + 1,
+        tokensEarned: gameStats.tokensEarned + earnedTokens
+      };
+      setGameStats(newStats);
+      
+      localStorage.setItem('zdos-token-balance', newBalance.toString());
+      localStorage.setItem('zdos-gaming-stats', JSON.stringify(newStats));
+      
+      setIsPlaying(false);
+      alert(`Gioco completato! +${earnedTokens} ZDOS tokens guadagnati!`);
+    }, 3000);
+  };
 
   return (
     <Layout>
-      <div className="animate-fade-in">
-        {/* Header */}
-        <section className="text-center mb-8">
-          <h1 className="neon-text mb-4" data-text="GAMING HUB">
-            GAMING HUB
-          </h1>
-          <div className="glitch-text text-lg mb-6" data-text="RETRO MULTIPLAYER ARCADE">
-            RETRO MULTIPLAYER ARCADE
+      <div className="gaming-hub">
+        <div className="gaming-header">
+          <div className="hub-title">
+            <h1 className="glitch-text" data-text="RETRO GAMING HUB">
+              RETRO GAMING HUB
+            </h1>
+            <p className="hub-subtitle">Gioca ai classici Atari e guadagna ZDOS tokens</p>
           </div>
-        </section>
-
-        {/* Game Selection */}
-        <section className="mb-8">
-          <div className="flex justify-center gap-4 mb-8">
-            <button 
-              onClick={() => setSelectedGame("doom")}
-              className={`game-selector ${selectedGame === "doom" ? "active" : ""}`}
-            >
-              <span className="text-4xl">👹</span>
-              <div>
-                <div className="font-retro font-bold">DOOM</div>
-                <div className="text-xs text-secondary">ETERNAL ONLINE</div>
+          
+          <div className="user-stats">
+            <div className="stat-card balance">
+              <div className="stat-icon">💰</div>
+              <div className="stat-info">
+                <div className="stat-label">BALANCE</div>
+                <div className="stat-value">{balance.toFixed(3)} ZDOS</div>
               </div>
-            </button>
+            </div>
             
-            <button 
-              onClick={() => setSelectedGame("duke")}
-              className={`game-selector ${selectedGame === "duke" ? "active" : ""}`}
-            >
-              <span className="text-4xl">💪</span>
-              <div>
-                <div className="font-retro font-bold">DUKE NUKEM</div>
-                <div className="text-xs text-secondary">3D ONLINE</div>
-              </div>
-            </button>
-          </div>
-        </section>
-
-        {/* Game Info Panel */}
-        <section className="mb-8">
-          <div className={`gaming-card bg-gradient-to-r ${currentGame.bgColor} border-2 border-primary`}>
-            <div className="flex items-center gap-6 mb-6">
-              <div className="text-8xl">{currentGame.icon}</div>
-              <div>
-                <h2 className={`font-retro text-3xl font-bold ${currentGame.color} mb-2`}>
-                  {currentGame.title}
-                </h2>
-                <div className="glitch-text text-lg mb-3" data-text={currentGame.subtitle}>
-                  {currentGame.subtitle}
-                </div>
-                <p className="text-secondary font-mono text-sm max-w-2xl">
-                  {currentGame.description}
-                </p>
+            <div className="stat-card games">
+              <div className="stat-icon">🎮</div>
+              <div className="stat-info">
+                <div className="stat-label">GAMES PLAYED</div>
+                <div className="stat-value">{gameStats.totalPlayed}</div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-              {currentGame.features.map((feature, index) => (
-                <div key={index} className="text-center p-3 bg-black/30 rounded border border-secondary/30">
-                  <div className="font-mono text-xs text-secondary">{feature}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-retro font-bold text-primary mb-1">
-                  {currentLobby.totalPlayers}
-                </div>
-                <div className="text-sm text-secondary font-mono">PLAYERS ONLINE</div>
+            
+            <div className="stat-card earned">
+              <div className="stat-icon">🏆</div>
+              <div className="stat-info">
+                <div className="stat-label">TOKENS EARNED</div>
+                <div className="stat-value">{gameStats.tokensEarned.toFixed(3)}</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-retro font-bold text-success mb-1">
-                  {currentLobby.servers.length}
-                </div>
-                <div className="text-sm text-secondary font-mono">ACTIVE SERVERS</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-retro font-bold text-accent mb-1">
-                  {currentLobby.version}
-                </div>
-                <div className="text-sm text-secondary font-mono">ENGINE VERSION</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Server Browser */}
-        <section className="mb-8">
-          <div className="gaming-card">
-            <div className="card-header mb-6">
-              <h3 className="card-title text-neon font-retro">SERVER BROWSER</h3>
-              <p className="card-subtitle font-mono">Choose your battlefield</p>
-            </div>
-
-            <div className="space-y-4">
-              {currentLobby.servers.map((server) => (
-                <div key={server.id} className="server-entry p-4 border border-secondary/30 rounded bg-black/20 hover:bg-black/40 transition-all">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-retro font-bold text-neon">{server.name}</h4>
-                        <div className="status-indicator status-gaming">
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span>LIVE</span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-secondary font-mono">PLAYERS:</span>
-                          <span className="ml-2 font-retro text-primary">{server.players}</span>
-                        </div>
-                        <div>
-                          <span className="text-secondary font-mono">MAP:</span>
-                          <span className="ml-2 font-retro text-accent">{server.map}</span>
-                        </div>
-                        <div>
-                          <span className="text-secondary font-mono">PING:</span>
-                          <span className={`ml-2 font-retro ${server.ping < 50 ? 'text-success' : server.ping < 100 ? 'text-warning' : 'text-error'}`}>
-                            {server.ping}ms
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-secondary font-mono">DIFFICULTY:</span>
-                          <span className="ml-2 font-mono text-xs text-error">{server.difficulty}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button className="btn btn-primary">
-                        <span>⚔️</span>
-                        <span>JOIN</span>
-                      </button>
-                      <button className="btn btn-secondary">
-                        <span>👥</span>
-                      </button>
-                      <button className="btn btn-secondary">
-                        <span>ℹ️</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${(parseInt(server.players.split('/')[0]) / parseInt(server.players.split('/')[1])) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 text-center">
-              <button className="btn btn-accent btn-lg">
-                <span>🔄</span>
-                <span>REFRESH SERVERS</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Player Stats & Mods */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Player Stats */}
-          <div className="gaming-card">
-            <div className="card-header mb-6">
-              <h3 className="card-title text-neon font-retro">PLAYER STATS</h3>
-              <p className="card-subtitle font-mono">Your combat record</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">FRAGS:</span>
-                <span className="font-retro text-xl text-primary">{playerStats.kills.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">DEATHS:</span>
-                <span className="font-retro text-xl text-error">{playerStats.deaths.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">K/D RATIO:</span>
-                <span className="font-retro text-xl text-success">{playerStats.ratio}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">LEVEL:</span>
-                <span className="font-retro text-xl text-accent">{playerStats.level}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">XP:</span>
-                <span className="font-retro text-xl text-warning">{playerStats.experience.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded">
-                <span className="font-mono text-secondary">ACHIEVEMENTS:</span>
-                <span className="font-retro text-xl text-primary">{playerStats.achievements}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mods & Add-ons */}
-          <div className="gaming-card">
-            <div className="card-header mb-6">
-              <h3 className="card-title text-neon font-retro">MODS & ADD-ONS</h3>
-              <p className="card-subtitle font-mono">Enhanced gameplay</p>
-            </div>
-
-            <div className="space-y-3">
-              {currentLobby.mods.map((mod, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-black/30 rounded">
-                  <div>
-                    <div className="font-retro text-neon">{mod}</div>
-                    <div className="text-xs text-secondary font-mono">v2.1.4 - ACTIVE</div>
-                  </div>
-                  <div className="status-indicator status-gaming">
-                    <div className="w-2 h-2 bg-success rounded-full"></div>
-                    <span>ENABLED</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <button className="btn btn-accent w-full">
-                <span>📦</span>
-                <span>BROWSE MORE MODS</span>
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <section className="mt-8">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="btn btn-primary btn-lg">
-              <span>🎮</span>
-              <span>QUICK MATCH</span>
-            </button>
-            <button className="btn btn-secondary btn-lg">
-              <span>🛠️</span>
-              <span>CREATE SERVER</span>
-            </button>
-            <button className="btn btn-accent btn-lg">
-              <span>🏆</span>
-              <span>TOURNAMENTS</span>
-            </button>
-            <button className="btn btn-secondary btn-lg">
-              <span>⚙️</span>
-              <span>SETTINGS</span>
+        {/* Faucet Section */}
+        <div className="faucet-section">
+          <div className="faucet-card">
+            <div className="faucet-icon">🚰</div>
+            <div className="faucet-info">
+              <h3>ZDOS TOKEN FAUCET</h3>
+              <p>Richiedi 0.1 ZDOS tokens gratuiti ogni ora</p>
+            </div>
+            <button className="faucet-btn" onClick={faucetClaim}>
+              CLAIM FAUCET
             </button>
           </div>
-        </section>
+        </div>
+
+        {/* Games Grid */}
+        <div className="games-section">
+          <h2 className="section-title">GIOCHI DISPONIBILI</h2>
+          
+          <div className="games-grid">
+            {atariGames.map((game) => (
+              <div key={game.id} className="game-card">
+                <div className="game-header">
+                  <div className="game-icon">{game.icon}</div>
+                  <div className="game-title">{game.name}</div>
+                </div>
+                
+                <div className="game-info">
+                  <p className="game-description">{game.description}</p>
+                  <div className="game-meta">
+                    <span className="game-difficulty">{game.difficulty}</span>
+                    <span className="game-reward">+{game.reward} ZDOS</span>
+                  </div>
+                </div>
+                
+                <button 
+                  className="play-btn"
+                  onClick={() => playGame(game)}
+                  disabled={isPlaying}
+                >
+                  {isPlaying && selectedGame?.id === game.id ? 'GIOCANDO...' : 'GIOCA ORA'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Game Canvas Placeholder */}
+        {isPlaying && (
+          <div className="game-overlay">
+            <div className="game-container">
+              <div className="game-canvas">
+                <div className="game-loading">
+                  <div className="loading-spinner"></div>
+                  <h3>Giocando a {selectedGame?.name}...</h3>
+                  <p>Simulating retro gaming experience...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Leaderboard */}
+        <div className="leaderboard-section">
+          <h2 className="section-title">LEADERBOARD</h2>
+          
+          <div className="leaderboard">
+            <div className="leaderboard-header">
+              <span>RANK</span>
+              <span>PLAYER</span>
+              <span>SCORE</span>
+              <span>TOKENS</span>
+            </div>
+            
+            <div className="leaderboard-entries">
+              <div className="leaderboard-entry">
+                <span className="rank">1</span>
+                <span className="player">CyberGamer123</span>
+                <span className="score">15,420</span>
+                <span className="tokens">45.6 ZDOS</span>
+              </div>
+              
+              <div className="leaderboard-entry">
+                <span className="rank">2</span>
+                <span className="player">RetroKing</span>
+                <span className="score">12,890</span>
+                <span className="tokens">38.2 ZDOS</span>
+              </div>
+              
+              <div className="leaderboard-entry">
+                <span className="rank">3</span>
+                <span className="player">PixelMaster</span>
+                <span className="score">11,340</span>
+                <span className="tokens">32.1 ZDOS</span>
+              </div>
+              
+              <div className="leaderboard-entry current-user">
+                <span className="rank">-</span>
+                <span className="player">Tu</span>
+                <span className="score">{gameStats.highScore}</span>
+                <span className="tokens">{gameStats.tokensEarned.toFixed(1)} ZDOS</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );
