@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏦 ZDOS Banking APK - Compilazione Online</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #001122, #002244);
+            color: #00ffff;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 20, 40, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+        h1 {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+        .step {
+            background: rgba(0, 40, 80, 0.5);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border-left: 4px solid #00cccc;
+        }
+        .step h3 {
+            color: #00cccc;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #00cccc, #0099cc);
+            color: #001122;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(45deg, #00ffff, #00ccff);
+            transform: translateY(-2px);
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.5);
+            color: #00ff88;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: rgba(255, 102, 0, 0.2);
+            border: 1px solid rgba(255, 102, 0, 0.5);
+            color: #ffaa00;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            color: #00ff88;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 ZDOS Banking - Compilazione APK</h1>
+        
+        <div class="step">
+            <h3>📱 Metodo 1: PhoneGap Build (Più Semplice)</h3>
+            <p>Compila l'APK online senza installare nulla:</p>
+            <div class="code">
+1. Vai su: https://build.phonegap.com
+2. Crea account gratuito Adobe
+3. Carica il file ZIP del progetto
+4. Seleziona Android
+5. Scarica APK pronto!
+            </div>
+            <a href="https://build.phonegap.com" target="_blank" class="btn">🚀 Apri PhoneGap Build</a>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Metodo 2: Cordova Locale (Avanzato)</h3>
+            <p>Se hai Node.js installato, usa questi comandi nel terminale VS Code:</p>
+            <div class="code">
+# Installa Cordova
+npm install -g cordova
+
+# Vai nella cartella progetto
+cd zdos-mobile-app
+
+# Aggiungi piattaforma Android
+cordova platform add android
+
+# Installa plugin
+cordova plugin add cordova-plugin-whitelist
+cordova plugin add cordova-plugin-device
+cordova plugin add cordova-plugin-splashscreen
+
+# Compila APK
+cordova build android
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🌐 Metodo 3: Android Studio</h3>
+            <p>Importa il progetto in Android Studio per massimo controllo:</p>
+            <div class="code">
+1. Scarica Android Studio
+2. Apri → Import Project
+3. Seleziona cartella zdos-mobile-app
+4. Build → Generate Signed APK
+            </div>
+            <a href="https://developer.android.com/studio" target="_blank" class="btn">📥 Download Android Studio</a>
+        </div>
+
+        <div class="success">
+            <h3>✅ File del Progetto Pronti</h3>
+            <p>Il progetto contiene già tutto il necessario:</p>
+            <ul>
+                <li><strong>config.xml</strong> - Configurazione Cordova</li>
+                <li><strong>www/index.html</strong> - App ZDOS Banking mobile</li>
+                <li><strong>package.json</strong> - Dipendenze</li>
+                <li><strong>build-apk.bat</strong> - Script automatico</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Prerequisiti per Metodo 2</h3>
+            <p>Per compilazione locale serve:</p>
+            <ul>
+                <li>Node.js (versione 14+)</li>
+                <li>Java JDK (versione 8+)</li>
+                <li>Android SDK</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>🎯 Risultato Finale</h3>
+            <p>L'APK sarà disponibile in:</p>
+            <div class="code">
+platforms/android/app/build/outputs/apk/
+├── debug/app-debug.apk          ← Per test
+└── release/app-release-unsigned.apk ← Per produzione
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>📲 Installazione APK</h3>
+            <ol>
+                <li>Trasferisci APK su dispositivo Android</li>
+                <li>Abilita "Origini sconosciute" in Impostazioni</li>
+                <li>Tocca file APK per installare</li>
+                <li>Apri app ZDOS Banking</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <p style="text-align: center; font-size: 1.2rem;">
+                🎉 <strong>Il tuo ZDOS Banking APK sarà pronto in pochi minuti!</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🏦 ZDOS Banking APK Build Guide Ready');
+        
+        // Auto-open PhoneGap Build se l'utente clicca
+        document.querySelector('a[href*="phonegap"]').addEventListener('click', function() {
+            setTimeout(() => {
+                alert('📱 Carica il file ZDOS-Banking-APK-Project.zip che hai creato!');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

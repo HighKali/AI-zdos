@@ -1,0 +1,43 @@
+{
+  "name": "zdos-banking-electron",
+  "version": "1.0.0",
+  "description": "ZDOS Banking Enterprise - Electron App",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
+    "build-mac": "electron-builder --mac",
+    "dist": "electron-builder --publish=never"
+  },
+  "build": {
+    "appId": "com.zdos.banking",
+    "productName": "ZDOS Banking Enterprise",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "www/**/*",
+      "electron-main.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "www/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "www/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "www/icon.icns"
+    }
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "author": "ZDOS Team",
+  "license": "MIT"
+}

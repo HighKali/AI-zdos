@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ZDOS Banking</title>
+    <meta name="description" content="Sistema bancario mobile privacy-first">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; object-src 'none'; connect-src * https://zdos.stream;">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #001122, #002244);
+            color: #00ffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .banking-dashboard {
+            max-width: 100%;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(0, 40, 80, 0.95));
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            padding: 1rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            margin: 0.5rem;
+        }
+
+        .signup-container {
+            text-align: center;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+        }
+
+        .app-title {
+            font-size: 2rem;
+            color: #00ffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+
+        .app-subtitle {
+            font-size: 0.9rem;
+            color: #ff6600;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px rgba(255, 102, 0, 0.5); }
+            to { text-shadow: 0 0 20px rgba(255, 102, 0, 0.8); }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #00cccc;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            transform: scale(1.02);
+        }
+
+        .mobile-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #00cccc, #0099cc);
+            color: #001122;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 204, 204, 0.3);
+        }
+
+        .mobile-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 204, 204, 0.3);
+        }
+
+        .mobile-btn:hover {
+            background: linear-gradient(45deg, #00ffff, #00ccff);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .balance-header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 200, 255, 0.1));
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .balance-amount {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+            margin-top: 0.5rem;
+        }
+
+        .rewards-cashback {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .reward-card {
+            background: linear-gradient(45deg, rgba(255, 102, 0, 0.2), rgba(255, 153, 0, 0.2));
+            border: 1px solid rgba(255, 153, 0, 0.4);
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-card {
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 200, 255, 0.1));
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .action-card:active {
+            transform: scale(0.96);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .action-label {
+            font-size: 1rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            color: #ff3366;
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            padding: 0.5rem;
+            background: rgba(255, 51, 102, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 40, 80, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .user-nickname {
+            font-size: 1.4rem;
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .user-phone {
+            font-size: 1rem;
+            color: #00cccc;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff4444, #cc3333);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 2rem;
+            font-size: 1rem;
+        }
+
+        .logout-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .banking-dashboard {
+                margin: 0.2rem;
+                padding: 1rem;
+                border-radius: 15px;
+            }
+            
+            .balance-amount {
+                font-size: 2.2rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* Status bar styling for Cordova */
+        .status-bar-overlay {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="banking-dashboard">
+        <!-- Registration Flow -->
+        <div id="registration" class="signup-container">
+            <div class="app-header">
+                <h1 class="app-title">🏦 ZDOS</h1>
+                <div class="app-subtitle">BANKING MOBILE</div>
+            </div>
+            
+            <div id="step1">
+                <div class="input-group">
+                    <label class="input-label">📱 NUMERO TELEFONO</label>
+                    <input type="tel" id="phone" placeholder="+39 123 456 7890" />
+                    <div id="phone-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="nextStep()">INVIA OTP</button>
+            </div>
+
+            <div id="step2" class="hidden">
+                <div class="input-group">
+                    <label class="input-label">👤 NICKNAME</label>
+                    <input type="text" id="nickname" placeholder="IlTuoNickname" />
+                    <div id="nickname-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="nextStep()">CONTINUA</button>
+            </div>
+
+            <div id="step3" class="hidden">
+                <div class="input-group">
+                    <label class="input-label">🔐 CODICE OTP</label>
+                    <input type="text" id="otp" placeholder="123456" maxlength="6" />
+                    <div id="otp-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="completeRegistration()">ACCEDI</button>
+            </div>
+        </div>
+
+        <!-- Banking Dashboard -->
+        <div id="dashboard" class="hidden">
+            <div class="user-info">
+                <div class="user-nickname" id="user-nickname"></div>
+                <div class="user-phone" id="user-phone"></div>
+            </div>
+
+            <div class="balance-header">
+                <div style="font-size: 1rem; color: #00cccc; margin-bottom: 0.5rem;">💰 SALDO DISPONIBILE</div>
+                <div class="balance-amount" id="balance-amount">€ 0,00</div>
+            </div>
+
+            <div class="rewards-cashback">
+                <div class="reward-card">
+                    <div style="font-size: 0.8rem; color: #ffaa00; margin-bottom: 0.5rem;">💎 CASHBACK</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #ff6600;" id="cashback-amount">€ 0,00</div>
+                </div>
+                <div class="reward-card">
+                    <div style="font-size: 0.8rem; color: #ffaa00; margin-bottom: 0.5rem;">🎁 REWARDS</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #ff6600;" id="rewards-amount">€ 0,00</div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <div class="action-card" onclick="p2pTransfer()">
+                    <div class="action-icon">📱</div>
+                    <div class="action-label">RICARICA P2P</div>
+                </div>
+                
+                <div class="action-card" onclick="atmAction()">
+                    <div class="action-icon">💳</div>
+                    <div class="action-label">BANCOMAT</div>
+                </div>
+                
+                <div class="action-card" onclick="linkAccount()">
+                    <div class="action-icon">🔗</div>
+                    <div class="action-label">COLLEGA CONTO</div>
+                </div>
+                
+                <div class="action-card" onclick="cryptoFeatures()">
+                    <div class="action-icon">₿</div>
+                    <div class="action-label">CRYPTO</div>
+                </div>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">🚪 DISCONNETTI</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="cordova.js"></script>
+    <script>
+        let currentStep = 1;
+        let userData = {};
+
+        // Cordova device ready
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log('ZDOS Banking App Ready');
+            
+            // Hide splash screen
+            if (navigator.splashscreen) {
+                setTimeout(() => {
+                    navigator.splashscreen.hide();
+                }, 1000);
+            }
+
+            // Set status bar
+            if (window.StatusBar) {
+                StatusBar.overlaysWebView(false);
+                StatusBar.styleDefault();
+            }
+
+            // Check if user is already logged in
+            checkSavedUser();
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            
+            // Vibrate on error
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+        }
+
+        function hideError(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function validatePhone(phone) {
+            const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '');
+            return /^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone.replace(/\s/g, ''));
+        }
+
+        function validateNickname(nickname) {
+            const cleanNickname = nickname.replace(/[^\w\-]/g, '');
+            return cleanNickname.length >= 3 && cleanNickname.length <= 20;
+        }
+
+        function validateOTP(otp) {
+            const cleanOtp = otp.replace(/\D/g, '');
+            return /^\d{6}$/.test(cleanOtp);
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                const phone = document.getElementById('phone').value.trim();
+                hideError('phone-error');
+                
+                if (!phone) {
+                    showError('phone-error', '📱 Numero telefono richiesto');
+                    return;
+                }
+                
+                if (!validatePhone(phone)) {
+                    showError('phone-error', '❌ Formato numero non valido');
+                    return;
+                }
+                
+                userData.phone = phone.replace(/[^\d\+\-\s]/g, '');
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                currentStep = 2;
+                
+                // Success vibration
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+                
+            } else if (currentStep === 2) {
+                const nickname = document.getElementById('nickname').value.trim();
+                hideError('nickname-error');
+                
+                if (!nickname) {
+                    showError('nickname-error', '👤 Nickname richiesto');
+                    return;
+                }
+                
+                if (!validateNickname(nickname)) {
+                    showError('nickname-error', '❌ Nickname non valido (3-20 caratteri)');
+                    return;
+                }
+                
+                userData.nickname = nickname.replace(/[^\w\-]/g, '');
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                currentStep = 3;
+                
+                // Success vibration
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }
+        }
+
+        function completeRegistration() {
+            const otp = document.getElementById('otp').value.trim();
+            hideError('otp-error');
+            
+            if (!otp) {
+                showError('otp-error', '🔐 Codice OTP richiesto');
+                return;
+            }
+            
+            if (!validateOTP(otp)) {
+                showError('otp-error', '❌ OTP deve essere 6 cifre');
+                return;
+            }
+            
+            userData.otp = otp.replace(/[^\d]/g, '');
+            userData.verified = true;
+            userData.balance = 0.00;
+            userData.cashback = 0.00;
+            userData.rewards = 0.00;
+            userData.registeredAt = new Date().toISOString();
+            
+            // Success vibration
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            
+            // Show dashboard
+            document.getElementById('registration').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            updateDashboard();
+            
+            // Save user data
+            if (window.localStorage) {
+                localStorage.setItem('zdos-banking-user', JSON.stringify(userData));
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('user-nickname').textContent = userData.nickname;
+            document.getElementById('user-phone').textContent = userData.phone;
+            document.getElementById('balance-amount').textContent = '€ ' + userData.balance.toFixed(2);
+            document.getElementById('cashback-amount').textContent = '€ ' + userData.cashback.toFixed(2);
+            document.getElementById('rewards-amount').textContent = '€ ' + userData.rewards.toFixed(2);
+        }
+
+        function p2pTransfer() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Funzione P2P Transfer - In sviluppo', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Funzione P2P Transfer - In sviluppo');
+            }
+        }
+
+        function atmAction() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Funzione Bancomat - In sviluppo', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Funzione Bancomat - In sviluppo');
+            }
+        }
+
+        function linkAccount() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Funzione Collegamento Conto - In sviluppo', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Funzione Collegamento Conto - In sviluppo');
+            }
+        }
+
+        function cryptoFeatures() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Funzioni Crypto - In sviluppo', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Funzioni Crypto - In sviluppo');
+            }
+        }
+
+        function logout() {
+            if (navigator.notification) {
+                navigator.notification.confirm(
+                    'Sei sicuro di voler disconnetterti?',
+                    function(buttonIndex) {
+                        if (buttonIndex === 1) { // OK button
+                            if (window.localStorage) {
+                                localStorage.removeItem('zdos-banking-user');
+                            }
+                            location.reload();
+                        }
+                    },
+                    'ZDOS Banking',
+                    ['Sì', 'Annulla']
+                );
+            } else {
+                if (confirm('Sei sicuro di voler disconnetterti?')) {
+                    if (window.localStorage) {
+                        localStorage.removeItem('zdos-banking-user');
+                    }
+                    location.reload();
+                }
+            }
+        }
+
+        function checkSavedUser() {
+            if (window.localStorage) {
+                const savedUser = localStorage.getItem('zdos-banking-user');
+                if (savedUser) {
+                    userData = JSON.parse(savedUser);
+                    document.getElementById('registration').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    updateDashboard();
+                }
+            }
+        }
+
+        // Fallback for web testing
+        if (!window.cordova) {
+            window.onload = checkSavedUser;
+        }
+    </script>
+</body>
+</html>

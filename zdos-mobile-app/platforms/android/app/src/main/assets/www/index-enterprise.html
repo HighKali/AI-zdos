@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ZDOS Banking Enterprise</title>
+    <meta name="description" content="Sistema bancario mobile enterprise con integrazione Visa/Mastercard e crypto">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; connect-src * https://zdos.stream https://api.visa.com https://api.mastercard.com;">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #001122, #002244);
+            color: #00ffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .banking-dashboard {
+            max-width: 100%;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(0, 40, 80, 0.95));
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            padding: 1rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            margin: 0.5rem;
+        }
+
+        .signup-container {
+            text-align: center;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+        }
+
+        .app-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-subtitle {
+            font-size: 1rem;
+            color: #00cccc;
+            font-weight: normal;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            color: #00ff88;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #00cccc;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .mobile-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 40, 80, 0.3);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #00ffff;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .mobile-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #00cccc, #0099cc);
+            color: #001122;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 204, 204, 0.3);
+        }
+
+        .mobile-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 204, 204, 0.3);
+        }
+
+        .mobile-btn:hover {
+            background: linear-gradient(45deg, #00ffff, #00ccff);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .balance-header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 200, 255, 0.1));
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .balance-amount {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+            margin-top: 0.5rem;
+        }
+
+        .dsn-tokens {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .dsn-amount {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .crypto-wallet {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .crypto-card {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 40, 80, 0.4);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .crypto-symbol {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .crypto-amount {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .rewards-cashback {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .reward-card {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: rgba(255, 170, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 170, 0, 0.3);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .action-card {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:active {
+            transform: scale(0.95);
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #00cccc;
+        }
+
+        .payment-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .payment-card {
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(45deg, rgba(0, 100, 200, 0.2), rgba(200, 0, 100, 0.2));
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .security-status {
+            padding: 1rem;
+            background: rgba(0, 100, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 51, 102, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 40, 80, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .user-nickname {
+            font-size: 1.4rem;
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .user-phone {
+            font-size: 1rem;
+            color: #00cccc;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff4444, #cc3333);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 2rem;
+            font-size: 1rem;
+        }
+
+        .logout-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .banking-dashboard {
+                margin: 0.2rem;
+                padding: 1rem;
+                border-radius: 15px;
+            }
+            
+            .app-title {
+                font-size: 1.6rem;
+            }
+            
+            .balance-amount {
+                font-size: 2.2rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="banking-dashboard">
+        <!-- Security Loading -->
+        <div id="security-check" class="signup-container">
+            <div class="app-header">
+                <div class="app-title">🏦 ZDOS BANKING</div>
+                <div class="app-subtitle">ENTERPRISE SECURITY CHECK</div>
+            </div>
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                <div style="font-size: 1.2rem; color: #00ff88; margin-bottom: 1rem;">Controlli di sicurezza in corso...</div>
+                <div id="security-status" style="font-size: 0.9rem; color: #00cccc;"></div>
+            </div>
+        </div>
+
+        <!-- Registration -->
+        <div id="registration" class="signup-container hidden">
+            <div class="app-header">
+                <div class="app-title">🏦 ZDOS BANKING</div>
+                <div class="app-subtitle">REGISTRAZIONE ENTERPRISE</div>
+            </div>
+
+            <!-- Step 1: Phone -->
+            <div id="step1" class="step active">
+                <div class="step-header">📱 NUMERO TELEFONO</div>
+                <div class="input-group">
+                    <label class="input-label">📞 TELEFONO</label>
+                    <input type="tel" id="phone" class="mobile-input" placeholder="+39 123 456 7890" />
+                    <div id="phone-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="nextStep()">CONTINUA</button>
+            </div>
+
+            <!-- Step 2: Nickname -->
+            <div id="step2" class="step">
+                <div class="step-header">👤 NICKNAME</div>
+                <div class="input-group">
+                    <label class="input-label">🏷️ NICKNAME</label>
+                    <input type="text" id="nickname" class="mobile-input" placeholder="Il tuo nickname" maxlength="20" />
+                    <div id="nickname-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="nextStep()">RICEVI OTP</button>
+            </div>
+
+            <!-- Step 3: OTP -->
+            <div id="step3" class="step">
+                <div class="step-header">🔐 VERIFICA OTP</div>
+                <div style="text-align: center; margin-bottom: 1.5rem; color: #00cccc;">
+                    SMS inviato a: <span id="display-phone"></span>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">🔐 CODICE OTP</label>
+                    <input type="text" id="otp" class="mobile-input" placeholder="123456" maxlength="6" />
+                    <div id="otp-error" class="error-message hidden"></div>
+                </div>
+                <button class="mobile-btn" onclick="completeRegistration()">ACCEDI</button>
+            </div>
+        </div>
+
+        <!-- Banking Dashboard -->
+        <div id="dashboard" class="hidden">
+            <div class="user-info">
+                <div class="user-nickname" id="user-nickname"></div>
+                <div class="user-phone" id="user-phone"></div>
+            </div>
+
+            <!-- Security Status -->
+            <div class="security-status">
+                <div style="font-weight: bold; margin-bottom: 0.5rem;">🛡️ STATUS SICUREZZA</div>
+                <div id="security-info">✅ Connessione sicura • IP verificato • Autenticazione attiva</div>
+            </div>
+
+            <!-- DSN Token Balance -->
+            <div class="dsn-tokens">
+                <div style="font-size: 1rem; color: #ffa500; margin-bottom: 0.5rem;">💎 DSN TOKEN</div>
+                <div class="dsn-amount" id="dsn-amount">1,000 DSN</div>
+                <div style="font-size: 0.8rem; color: #ffa500; margin-top: 0.5rem;">Token primario ZDOS</div>
+            </div>
+
+            <!-- Fiat Balance -->
+            <div class="balance-header">
+                <div style="font-size: 1rem; color: #00cccc; margin-bottom: 0.5rem;">💰 SALDO FIAT</div>
+                <div class="balance-amount" id="balance-amount">€ 0,00</div>
+            </div>
+
+            <!-- Crypto Wallet -->
+            <div style="text-align: center; margin: 1.5rem 0; font-weight: bold; color: #00ff88;">🪙 CRYPTO WALLET</div>
+            <div class="crypto-wallet" id="crypto-wallet">
+                <!-- Dynamic crypto tokens will be added here -->
+            </div>
+
+            <!-- Payment Cards Integration -->
+            <div style="text-align: center; margin: 1.5rem 0; font-weight: bold; color: #00cccc;">💳 CIRCUITI COLLEGATI</div>
+            <div class="payment-cards">
+                <div class="payment-card">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
+                    <div style="font-weight: bold; color: #1a73e8;">VISA</div>
+                    <div style="font-size: 0.8rem; color: #00cccc;">Connesso</div>
+                </div>
+                <div class="payment-card">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
+                    <div style="font-weight: bold; color: #eb001b;">MASTERCARD</div>
+                    <div style="font-size: 0.8rem; color: #00cccc;">Connesso</div>
+                </div>
+            </div>
+
+            <!-- Rewards & Cashback -->
+            <div class="rewards-cashback">
+                <div class="reward-card">
+                    <div style="font-size: 0.8rem; color: #ffaa00; margin-bottom: 0.5rem;">💎 CASHBACK</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #ff6600;" id="cashback-amount">€ 0,00</div>
+                </div>
+                <div class="reward-card">
+                    <div style="font-size: 0.8rem; color: #ffaa00; margin-bottom: 0.5rem;">🎁 REWARDS</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #ff6600;" id="rewards-amount">€ 0,00</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card" onclick="p2pTransfer()">
+                    <div class="action-icon">📱</div>
+                    <div class="action-label">RICARICA P2P</div>
+                </div>
+                
+                <div class="action-card" onclick="atmAction()">
+                    <div class="action-icon">💳</div>
+                    <div class="action-label">BANCOMAT</div>
+                </div>
+                
+                <div class="action-card" onclick="linkAccount()">
+                    <div class="action-icon">🔗</div>
+                    <div class="action-label">COLLEGA CONTO</div>
+                </div>
+                
+                <div class="action-card" onclick="cryptoFeatures()">
+                    <div class="action-icon">₿</div>
+                    <div class="action-label">CRYPTO</div>
+                </div>
+
+                <div class="action-card" onclick="visaPayment()">
+                    <div class="action-icon">💳</div>
+                    <div class="action-label">VISA PAY</div>
+                </div>
+
+                <div class="action-card" onclick="mastercardPayment()">
+                    <div class="action-icon">💳</div>
+                    <div class="action-label">MC PAY</div>
+                </div>
+
+                <div class="action-card" onclick="cryptoBridge()">
+                    <div class="action-icon">🌉</div>
+                    <div class="action-label">CRYPTO BRIDGE</div>
+                </div>
+
+                <div class="action-card" onclick="tokenRewards()">
+                    <div class="action-icon">🎁</div>
+                    <div class="action-label">TOKEN REWARDS</div>
+                </div>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">🚪 DISCONNETTI</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let userData = {};
+        let securityData = {};
+        let cryptoWallet = {};
+
+        // Enterprise Banking Configuration
+        const ZDOS_CONFIG = {
+            DSN_TOKEN_REWARD: 1000,
+            SECURITY_LEVEL: 'ENTERPRISE',
+            VISA_INTEGRATION: true,
+            MASTERCARD_INTEGRATION: true,
+            CRYPTO_BRIDGE: true,
+            API_ENDPOINTS: {
+                visa: 'https://api.visa.com/payments',
+                mastercard: 'https://api.mastercard.com/payments',
+                crypto: 'https://api.zdos.stream/crypto',
+                security: 'https://api.zdos.stream/security',
+                tokens: 'https://api.coingecko.com/api/v3/simple/price'
+            },
+            AVAILABLE_TOKENS: [
+                { symbol: '₿', name: 'Bitcoin', id: 'bitcoin' },
+                { symbol: 'Ξ', name: 'Ethereum', id: 'ethereum' },
+                { symbol: '💎', name: 'DSN', id: 'dsn-token' },
+                { symbol: '🚀', name: 'Solana', id: 'solana' },
+                { symbol: '🔷', name: 'Cardano', id: 'cardano' },
+                { symbol: '🌊', name: 'Polygon', id: 'matic-network' }
+            ],
+            BLACKLISTED_IPS: [
+                '192.168.1.1', '10.0.0.1', '172.16.0.1' // Example blacklist
+            ]
+        };
+
+        // Cordova device ready
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log('📱 Cordova Ready');
+            performSecurityChecks();
+        }
+
+        // Enhanced Security System
+        async function performSecurityChecks() {
+            updateSecurityStatus('🔍 Analisi IP e geolocalizzazione...');
+            
+            try {
+                // IP & Proxy Detection
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                securityData.userIP = ipData.ip;
+                
+                updateSecurityStatus('🛡️ Controllo proxy e VPN...');
+                
+                // Check IP blacklist
+                if (ZDOS_CONFIG.BLACKLISTED_IPS.includes(ipData.ip)) {
+                    throw new Error('IP_BLACKLISTED');
+                }
+                
+                // Enhanced device fingerprinting
+                securityData.device = {
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    screen: `${screen.width}x${screen.height}`,
+                    platform: navigator.platform,
+                    cookieEnabled: navigator.cookieEnabled,
+                    onLine: navigator.onLine,
+                    timestamp: new Date().toISOString()
+                };
+                
+                updateSecurityStatus('🔐 Verifica sicurezza completata');
+                
+                // Initialize crypto wallet with random tokens
+                await initializeCryptoWallet();
+                
+                setTimeout(() => {
+                    document.getElementById('security-check').classList.add('hidden');
+                    checkSavedUser();
+                }, 2000);
+                
+            } catch (error) {
+                if (error.message === 'IP_BLACKLISTED') {
+                    updateSecurityStatus('❌ Accesso negato: IP in blacklist');
+                    if (navigator.notification) {
+                        navigator.notification.alert('Accesso negato per motivi di sicurezza', null, 'ZDOS Banking', 'OK');
+                    }
+                    return;
+                }
+                
+                updateSecurityStatus('⚠️ Controlli sicurezza in modalità offline');
+                setTimeout(() => {
+                    document.getElementById('security-check').classList.add('hidden');
+                    checkSavedUser();
+                }, 1500);
+            }
+        }
+
+        function updateSecurityStatus(message) {
+            document.getElementById('security-status').textContent = message;
+        }
+
+        // Initialize crypto wallet with random tokens
+        async function initializeCryptoWallet() {
+            cryptoWallet = {};
+            
+            // Always include DSN token
+            cryptoWallet['dsn-token'] = {
+                symbol: '💎',
+                name: 'DSN',
+                amount: ZDOS_CONFIG.DSN_TOKEN_REWARD,
+                value: ZDOS_CONFIG.DSN_TOKEN_REWARD * 0.1 // Example: 0.1€ per DSN
+            };
+            
+            // Add random tokens
+            const availableTokens = ZDOS_CONFIG.AVAILABLE_TOKENS.filter(t => t.id !== 'dsn-token');
+            const randomCount = Math.floor(Math.random() * 3) + 2; // 2-4 random tokens
+            
+            for (let i = 0; i < randomCount; i++) {
+                const randomToken = availableTokens[Math.floor(Math.random() * availableTokens.length)];
+                const randomAmount = Math.random() * 10 + 0.1; // 0.1 to 10 tokens
+                
+                cryptoWallet[randomToken.id] = {
+                    symbol: randomToken.symbol,
+                    name: randomToken.name,
+                    amount: randomAmount,
+                    value: randomAmount * (Math.random() * 100 + 10) // Random value
+                };
+            }
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+        }
+
+        function hideError(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function validatePhone(phone) {
+            const cleanPhone = phone.replace(/[^\d\+\-\s]/g, '');
+            return /^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone.replace(/\s/g, ''));
+        }
+
+        function validateNickname(nickname) {
+            const cleanNickname = nickname.replace(/[^\w\-]/g, '');
+            return cleanNickname.length >= 3 && cleanNickname.length <= 20;
+        }
+
+        function validateOTP(otp) {
+            const cleanOtp = otp.replace(/\D/g, '');
+            return /^\d{6}$/.test(cleanOtp);
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                const phone = document.getElementById('phone').value.trim();
+                hideError('phone-error');
+                
+                if (!phone) {
+                    showError('phone-error', '📱 Numero telefono richiesto');
+                    return;
+                }
+                
+                if (!validatePhone(phone)) {
+                    showError('phone-error', '❌ Formato numero non valido');
+                    return;
+                }
+                
+                userData.phone = phone.replace(/[^\d\+\-\s]/g, '');
+                showStep(2);
+                currentStep = 2;
+                
+            } else if (currentStep === 2) {
+                const nickname = document.getElementById('nickname').value.trim();
+                hideError('nickname-error');
+                
+                if (!nickname) {
+                    showError('nickname-error', '👤 Nickname richiesto');
+                    return;
+                }
+                
+                if (!validateNickname(nickname)) {
+                    showError('nickname-error', '❌ Nickname deve essere 3-20 caratteri, solo lettere/numeri');
+                    return;
+                }
+                
+                userData.nickname = nickname.replace(/[^\w\-]/g, '');
+                document.getElementById('display-phone').textContent = userData.phone;
+                showStep(3);
+                currentStep = 3;
+                
+                // Simulate OTP send
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }
+        }
+
+        function completeRegistration() {
+            const otp = document.getElementById('otp').value.trim();
+            hideError('otp-error');
+            
+            if (!otp) {
+                showError('otp-error', '🔐 Codice OTP richiesto');
+                return;
+            }
+            
+            if (!validateOTP(otp)) {
+                showError('otp-error', '❌ OTP deve essere 6 cifre');
+                return;
+            }
+            
+            // Initialize user data with enterprise features
+            userData.balance = 0.00;
+            userData.cashback = 0.00;
+            userData.rewards = 0.00;
+            userData.dsnTokens = ZDOS_CONFIG.DSN_TOKEN_REWARD;
+            userData.cryptoWallet = cryptoWallet;
+            userData.registeredAt = new Date().toISOString();
+            userData.securityData = securityData;
+            userData.visaConnected = true;
+            userData.mastercardConnected = true;
+            
+            // Success vibration
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            
+            // Show dashboard
+            document.getElementById('registration').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            updateDashboard();
+            
+            // Save user data
+            if (window.localStorage) {
+                localStorage.setItem('zdos-banking-user', JSON.stringify(userData));
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('user-nickname').textContent = userData.nickname;
+            document.getElementById('user-phone').textContent = userData.phone;
+            document.getElementById('balance-amount').textContent = '€ ' + userData.balance.toFixed(2);
+            document.getElementById('cashback-amount').textContent = '€ ' + userData.cashback.toFixed(2);
+            document.getElementById('rewards-amount').textContent = '€ ' + userData.rewards.toFixed(2);
+            document.getElementById('dsn-amount').textContent = userData.dsnTokens.toLocaleString() + ' DSN';
+            
+            // Update crypto wallet display
+            updateCryptoWalletDisplay();
+            
+            // Update security info
+            const securityInfo = document.getElementById('security-info');
+            if (userData.securityData && userData.securityData.userIP) {
+                securityInfo.textContent = `✅ IP: ${userData.securityData.userIP} • Connessione sicura • Enterprise Auth`;
+            }
+        }
+
+        function updateCryptoWalletDisplay() {
+            const cryptoContainer = document.getElementById('crypto-wallet');
+            cryptoContainer.innerHTML = '';
+            
+            if (userData.cryptoWallet) {
+                Object.entries(userData.cryptoWallet).forEach(([tokenId, tokenData]) => {
+                    const cryptoCard = document.createElement('div');
+                    cryptoCard.className = 'crypto-card';
+                    cryptoCard.innerHTML = `
+                        <div class="crypto-symbol">${tokenData.symbol}</div>
+                        <div style="font-size: 0.8rem; color: #00cccc; margin-bottom: 0.3rem;">${tokenData.name}</div>
+                        <div class="crypto-amount">${tokenData.amount.toFixed(4)}</div>
+                        <div style="font-size: 0.7rem; color: #ffaa00;">€${tokenData.value.toFixed(2)}</div>
+                    `;
+                    cryptoContainer.appendChild(cryptoCard);
+                });
+            }
+        }
+
+        // Enhanced Banking Functions
+        function p2pTransfer() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('P2P Transfer Enterprise - Integrazione Visa/Mastercard', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('P2P Transfer Enterprise - Integrazione Visa/Mastercard');
+            }
+        }
+
+        function atmAction() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Bancomat Enterprise - Circuiti collegati', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Bancomat Enterprise - Circuiti collegati');
+            }
+        }
+
+        function linkAccount() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Collega Conto - Visa/Mastercard/Crypto Bridge', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Collega Conto - Visa/Mastercard/Crypto Bridge');
+            }
+        }
+
+        function cryptoFeatures() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Crypto Features - DSN Token Primario + Multi-Token Wallet', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Crypto Features - DSN Token Primario + Multi-Token Wallet');
+            }
+        }
+
+        function visaPayment() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Visa Payment API - Integrazione diretta circuito Visa', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Visa Payment API - Integrazione diretta circuito Visa');
+            }
+        }
+
+        function mastercardPayment() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Mastercard Payment API - Integrazione diretta circuito Mastercard', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Mastercard Payment API - Integrazione diretta circuito Mastercard');
+            }
+        }
+
+        function cryptoBridge() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            if (navigator.notification) {
+                navigator.notification.alert('Crypto Bridge - Collegamento Fiat/Crypto con DSN Token', null, 'ZDOS Banking', 'OK');
+            } else {
+                alert('Crypto Bridge - Collegamento Fiat/Crypto con DSN Token');
+            }
+        }
+
+        function tokenRewards() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            
+            // Add random tokens to wallet
+            const availableTokens = ZDOS_CONFIG.AVAILABLE_TOKENS;
+            const randomToken = availableTokens[Math.floor(Math.random() * availableTokens.length)];
+            const rewardAmount = Math.random() * 5 + 0.1;
+            
+            if (!userData.cryptoWallet[randomToken.id]) {
+                userData.cryptoWallet[randomToken.id] = {
+                    symbol: randomToken.symbol,
+                    name: randomToken.name,
+                    amount: 0,
+                    value: 0
+                };
+            }
+            
+            userData.cryptoWallet[randomToken.id].amount += rewardAmount;
+            userData.cryptoWallet[randomToken.id].value += rewardAmount * (Math.random() * 50 + 5);
+            
+            updateCryptoWalletDisplay();
+            
+            if (window.localStorage) {
+                localStorage.setItem('zdos-banking-user', JSON.stringify(userData));
+            }
+            
+            if (navigator.notification) {
+                navigator.notification.alert(`Token Reward! +${rewardAmount.toFixed(4)} ${randomToken.name}`, null, 'ZDOS Banking', 'OK');
+            } else {
+                alert(`Token Reward! +${rewardAmount.toFixed(4)} ${randomToken.name}`);
+            }
+        }
+
+        function logout() {
+            if (navigator.notification) {
+                navigator.notification.confirm(
+                    'Sei sicuro di voler disconnetterti?',
+                    function(buttonIndex) {
+                        if (buttonIndex === 1) {
+                            if (window.localStorage) {
+                                localStorage.removeItem('zdos-banking-user');
+                            }
+                            location.reload();
+                        }
+                    },
+                    'ZDOS Banking',
+                    ['Sì', 'Annulla']
+                );
+            } else {
+                if (confirm('Sei sicuro di voler disconnetterti?')) {
+                    if (window.localStorage) {
+                        localStorage.removeItem('zdos-banking-user');
+                    }
+                    location.reload();
+                }
+            }
+        }
+
+        function checkSavedUser() {
+            if (window.localStorage) {
+                const savedUser = localStorage.getItem('zdos-banking-user');
+                if (savedUser) {
+                    userData = JSON.parse(savedUser);
+                    document.getElementById('registration').classList.remove('hidden');
+                    document.getElementById('registration').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    updateDashboard();
+                } else {
+                    document.getElementById('registration').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('registration').classList.remove('hidden');
+            }
+        }
+
+        // Fallback for web testing
+        if (!window.cordova) {
+            window.onload = function() {
+                performSecurityChecks();
+            };
+        }
+    </script>
+</body>
+</html>

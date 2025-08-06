@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build ZDOS Banking APK",
+			"type": "shell",
+			"command": "cordova",
+			"args": [
+				"build",
+				"android",
+				"--debug"
+			],
+			"group": "build",
+			"isBackground": false,
+			"options": {
+				"cwd": "${workspaceFolder}/zdos-mobile-app"
+			},
+			"problemMatcher": []
+		}
+	]
+}
